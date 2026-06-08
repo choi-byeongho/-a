@@ -298,7 +298,7 @@ const MODULES = [
   {
     id:'credenza_02', name:'크레덴자 TYPE 02 — 미니바 통합형', area:'하이엔드 수납',
     pfKey: () => 'credenza_02',
-    on: c => c.price === 'P1' || c.space === 'S4',
+    on: c => c.space === 'S4' || (c.price === 'P1' && c.rank === 'R1'),
     detail: () => [
       { b:'P1', t:'VIP 접객용 · 소형 냉장고 매립 · AV 전원 연동 · 하이엔드 마감' },
       { b:'WS', t:'대외 영접 최상급 연출' },
