@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>중역가구 포트폴리오 갭 분석기 v4</title>
+<style>
+  :root{
+    --bg:#f4f2ec;--surface:#fff;--ink:#23221e;--ink2:#6b685f;
+    --line:#e2ded3;--accent:#7a5c3e;
+    --on:#0f6e56;--on-bg:#e1f5ee;
+    --part:#854f0b;--part-bg:#faeeda;
+    --gap:#a32d2d;--gap-bg:#fcebeb;
+    --off:#b4b2a9;--radius:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Pretendard','Apple SD Gothic Neo',-apple-system,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.6;padding:32px 20px}
+  .wrap{max-width:1060px;margin:0 auto}
+  header{margin-bottom:24px;border-bottom:2px solid var(--ink);padding-bottom:14px}
+  h1{font-size:21px;font-weight:700;letter-spacing:-0.02em}
+  .sub{font-size:13px;color:var(--ink2);margin-top:4px}
+  .panel{background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--radius);padding:18px 20px;margin-bottom:14px}
+  .panel-title{font-size:11px;font-weight:700;text-transform:uppercase;
+    letter-spacing:.08em;color:var(--ink2);margin-bottom:12px}
+  .controls{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  @media(max-width:700px){.controls{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:400px){.controls{grid-template-columns:1fr}}
+  label{display:block;font-size:12px;font-weight:600;margin-bottom:5px;color:var(--ink2)}
+  select{width:100%;padding:9px 12px;font-size:14px;font-family:inherit;
+    border:1px solid var(--line);border-radius:8px;background:var(--surface);
+    color:var(--ink);cursor:pointer;appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%236b685f' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 12px center}
+  select:focus{outline:none;border-color:var(--accent)}
+  select option:disabled{color:#c0bdb4;background:#f5f3ed}
+  .ws-row{display:flex;gap:8px;flex-wrap:wrap}
+  .ws-chip{padding:6px 14px;background:#efe7dd;border:1px solid var(--accent);
+    border-radius:8px;font-size:12px;font-weight:700;color:var(--accent)}
+  .ws-sub{font-size:11px;font-weight:400;color:var(--ink2);margin-top:1px}
+  .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .stat{text-align:center;padding:10px;background:var(--bg);border-radius:8px}
+  .stat-num{font-size:22px;font-weight:700;display:block}
+  .stat-label{font-size:11px;color:var(--ink2)}
+  .num-on{color:var(--on)}.num-part{color:var(--part)}.num-gap{color:var(--gap)}
+  .area{margin-bottom:18px}
+  .area-title{font-size:11px;font-weight:700;color:var(--ink2);
+    margin-bottom:8px;padding-bottom:3px;border-bottom:1px solid var(--line);
+    text-transform:uppercase;letter-spacing:.06em}
+  .mod-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
+  @media(max-width:620px){.mod-grid{grid-template-columns:1fr}}
+  .mod{border-radius:8px;border:1px solid var(--line);overflow:hidden}
+  .mod.on-exist{border-color:var(--on)}
+  .mod.on-partial{border-color:var(--part)}
+  .mod.on-gap{border-color:var(--gap)}
+  .mod-head{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;gap:8px}
+  .mod-name{font-size:13px;font-weight:600;flex:1}
+  .mod.on-exist .mod-name{color:var(--on)}
+  .mod.on-partial .mod-name{color:var(--part)}
+  .mod.on-gap .mod-name{color:var(--gap)}
+  .badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;white-space:nowrap;flex-shrink:0}
+  .badge-on{background:var(--on);color:#fff}
+  .badge-part{background:var(--part);color:#fff}
+  .badge-gap{background:var(--gap);color:#fff}
+  .badge-p{font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;white-space:nowrap;flex-shrink:0}
+  .bp1{background:#eeedfe;color:#3c3489}
+  .bp2{background:#e6f1fb;color:#185fa5}
+  .bp3{background:#f1efe8;color:#5f5e5a}
+  .bws{background:#efe7dd;color:var(--accent)}
+  .mod-detail{padding:0 12px 9px;display:flex;flex-direction:column;gap:3px}
+  .dr{display:flex;gap:5px;align-items:flex-start}
+  .dt{font-size:11px;color:var(--ink2);line-height:1.45}
+  .gap-note{font-size:11px;color:var(--gap);font-weight:600;margin-top:3px;
+    padding:4px 8px;background:var(--gap-bg);border-radius:4px;display:block;line-height:1.4}
+  .part-note{font-size:11px;color:var(--part);font-weight:600;margin-top:3px;
+    padding:4px 8px;background:var(--part-bg);border-radius:4px;display:block;line-height:1.4}
+  .exist-note{font-size:11px;color:var(--on);margin-top:2px;display:block;padding:0 0 0 2px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;align-items:center}
+  .leg{display:flex;align-items:center;gap:5px}
+  .leg-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+  .leg-on{background:var(--on)}.leg-part{background:var(--part)}.leg-gap{background:var(--gap)}
+  .priority-box{background:var(--gap-bg);border:1px solid var(--gap);border-radius:8px;
+    padding:14px 16px;margin-bottom:14px}
+  .priority-box h3{font-size:12px;font-weight:700;color:var(--gap);margin-bottom:8px;
+    text-transform:uppercase;letter-spacing:.06em}
+  .priority-list{display:flex;flex-direction:column;gap:5px}
+  .priority-item{font-size:12px;color:var(--gap);display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+  .pri-num{font-weight:700;font-size:14px;min-width:16px}
+  .pri-text{color:var(--ink2);font-size:12px}
+  footer{text-align:center;font-size:11px;color:var(--off);margin-top:20px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>중역가구 포트폴리오 갭 분석기 v4</h1>
+  <div class="sub">공간·직급·가격대·직군 4축 입력 → 18개 필요 모듈 도출 → 퍼시스 Premier Class 보유 여부 대조 · 내부 확인용</div>
+</header>
+
+<div class="panel">
+  <div class="panel-title">입력 (4축)</div>
+  <div class="controls">
+    <div>
+      <label>공간 (Space)</label>
+      <select id="spaceSelect" onchange="syncOptions(this.id)"></select>
+    </div>
+    <div>
+      <label>직급 (Rank)</label>
+      <select id="rankSelect" onchange="syncOptions(this.id)"></select>
+    </div>
+    <div>
+      <label>가격대 (Price)</label>
+      <select id="priceSelect" onchange="syncOptions(this.id)"></select>
+    </div>
+    <div>
+      <label>직군 (Industry)</label>
+      <select id="industry" onchange="updateSimulation()"></select>
+    </div>
+  </div>
+</div>
+
+<div id="priorityBox"></div>
+
+<div class="panel">
+  <div class="panel-title" style="margin-bottom:8px">범례</div>
+  <div class="legend">
+    <div class="leg"><div class="leg-dot leg-on"></div><span>있음 — 퍼시스 보유</span></div>
+    <div class="leg"><div class="leg-dot leg-part"></div><span>부분 — 유사 제품 있으나 미흡</span></div>
+    <div class="leg"><div class="leg-dot leg-gap"></div><span>공백 — Premier Class 내 없음</span></div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-title">도출된 워크방식</div>
+  <div class="ws-row" id="wsRow"></div>
+</div>
+
+<div class="panel">
+  <div class="panel-title">가구 구성 + 포트폴리오 갭 (총 18개 모듈)</div>
+  <div id="modResult"></div>
+</div>
+
+<div class="panel">
+  <div class="panel-title">요약</div>
+  <div class="stat-row">
+    <div class="stat"><span class="stat-num num-on" id="cOn">0</span><span class="stat-label">있음</span></div>
+    <div class="stat"><span class="stat-num num-part" id="cPart">0</span><span class="stat-label">부분</span></div>
+    <div class="stat"><span class="stat-num num-gap" id="cGap">0</span><span class="stat-label">공백</span></div>
+    <div class="stat"><span class="stat-num" id="cTotal">0</span><span class="stat-label">활성 모듈</span></div>
+  </div>
+</div>
+
+<footer>Fursys 중역가구 포트폴리오 갭 분석기 v4 · 내부 검토용 프로토타입 · Premier Class 기준 2025.06</footer>
+</div>
+
+<script>
+// ============================================================
+// [A] 기초 데이터
+// ============================================================
+const SPACES     = { S1:'전용 집무실', S2:'준독립 집무실', S3:'오픈 중역석', S4:'VIP 복합룸' };
+const RANKS      = { R1:'C-Level', R2:'임원', R3:'본부장급', R4:'준임원·팀장급' };
+const PRICES     = { P1:'플래그십', P2:'프리미엄', P3:'스탠다드' };
+const INDUSTRIES = { I1:'보수·전문직군', I2:'혁신·IT직군', I3:'영업·실무직군' };
+
+const WS_META = {
+  '집중결재형': { sub:'수납 최대화·독립 집중' },
+  '대면보고형': { sub:'보고 동선·방문자 응대' },
+  '협업주도형': { sub:'소통·이동성 우선' },
+  '대외영접형': { sub:'영접·브랜딩 강화' },
+  '실무집중형': { sub:'업무 효율·기능 우선' },
+};
+
+// ============================================================
+// [B] 퍼시스 포트폴리오 갭 DB
+// ============================================================
+const PF = {
+  main_fixed:      { status:'exist',   products:'세티나·만하튼·마커스·Incontro 등',         note:'세티나, 만하튼 등 자사 최고급 라인으로 완벽 대응 가능' },
+  main_motion:     { status:'exist',   products:'아비에르토·Kammer·M703+·Flowfinder 모션데스크', note:'아비에르토 등 오픈 공간용 프리미엄 모션 데스크로 대응 가능' },
+  side_motion:     { status:'partial', products:'아비에르토 사이드 라인',                   note:'프리미엄급 디자인의 사이드 모션 라인업 다소 한정적' },
+  l_ext:           { status:'exist',   products:'세티나·티에라·Incontro 등',                note:'세티나, 만하튼 등 자사 최고급 라인으로 완벽 대응 가능' },
+  smart_panel:     { status:'partial', products:'—',                                        note:'기본 배선 트레이 제공, 완전 은폐형 스마트 패널 시스템 미흡' },
+  conf_table:      { status:'exist',   products:'전 라인 회의 테이블',                      note:'전 라인 소회의 테이블 구성 가능' },
+  round_table:     { status:'partial', products:'티에라 원형',                              note:'일부 라인만 제공, 라운지용 원형 테이블 선택 제한적' },
+  work_wall_b:     { status:'gap',     products:'—',                                        note:'퍼시스 라인업에 데스크 직결형 북미 표준 시스템 부재 (최우선 개발 필요)' },
+  work_wall_a:     { status:'partial', products:'Kammer 패널(부분)',                        note:'Kammer 패널 유사 제품 있으나 완전 통합 시스템 미흡' },
+  work_wall_c:     { status:'partial', products:'일부 측벽 수납',                           note:'측벽형 수납 솔루션 일부 라인에서 제공, 완전 통합 시스템 부재' },
+  credenza_01:     { status:'exist',   products:'수평형 크레덴자 다수',                     note:'수평 연출형 크레덴자 다수 라인 보유' },
+  credenza_02:     { status:'gap',     products:'—',                                        note:'VIP 전용 소형 냉장고/AV 전원 완벽 매립형 크레덴자 부재' },
+  credenza_03:     { status:'exist',   products:'마커스·세오스·맨하튼 등',                  note:'벽면 수납형 크레덴자 다수 라인 보유' },
+  wardrobe:        { status:'partial', products:'일부 라인 선택 사양',                      note:'임원용 전용 프리미엄 옷장 라인업 다소 부족, 일부만 제공' },
+  vip_sofa:        { status:'exist',   products:'마커스·세오스·Incontro·Monarch',           note:'Marcus, Ceos 등 VIP 소파 세트 완비' },
+  lounge_chair:    { status:'exist',   products:'라운지 체어 시리즈',                       note:'1인용 라운지 체어 다수 라인 보유' },
+  reception_table: { status:'exist',   products:'소파 테이블·티테이블 라인',                note:'응접용 티테이블 세트 다수 라인 보유' },
+  display_wall:    { status:'gap',     products:'—',                                        note:'대형 모니터 및 화상장비 전선 은폐형 프리미엄 미디어 가구 부재' },
+  privacy_screen:  { status:'partial', products:'기본 파티션 라인',                         note:'기본 파티션 있으나 프리미엄 임원급 프라이버시 스크린 한정적' },
+  security_lock:   { status:'partial', products:'기본 잠금장치',                            note:'기본 잠금장치 제공, 지문인식·개인 금고 일체형 솔루션 부재' },
+};
+
+// ============================================================
+// [C] 18개 모듈 정의
+// ============================================================
+const MODULES = [
+  // ── 데스크 시스템 (5) ──────────────────────────────────────
+  {
+    id:'main_fixed', name:'메인 고정 데스크', area:'데스크 시스템',
+    pfKey: () => 'main_fixed',
+    on: c => ['R1','R2'].includes(c.rank) && c.industry === 'I1',
+    detail: c => {
+      const mat = c.price==='P1' ? '원목 상판·석재 마감' : c.price==='P2' ? '목재+메탈 복합' : '고급 라미네이트';
+      const sz  = c.price==='P1' ? '2000mm+ 대형' : c.price==='P2' ? '1800mm 중대형' : '1600mm 중형';
+      return [{ b:'P', t: mat + ' · ' + sz }, { b:'WS', t:'결재·보고 공간 최적화' }];
+    }
+  },
+  {
+    id:'main_motion', name:'메인 모션 데스크', area:'데스크 시스템',
+    pfKey: () => 'main_motion',
+    on: c => c.industry === 'I2' || c.rank === 'R4',
+    detail: c => {
+      const top = c.price==='P1' ? '프리미엄 원목 상판' : c.price==='P2' ? '고급 라미네이트+메탈 프레임' : '기본 라미네이트';
+      return [{ b:'P', t:'전동 높낮이 조절 · ' + top }, { b:'WS', t:'스탠딩 전환·건강 업무 환경' }];
+    }
+  },
+  {
+    id:'side_motion', name:'사이드 모션 데스크', area:'데스크 시스템',
+    pfKey: () => 'side_motion',
+    on: c => ['R1','R2'].includes(c.rank) && c.industry === 'I1',
+    detail: c => {
+      const fin = c.price==='P1' ? '원목 마감·소프트 조인트' : '메탈+우드 혼합';
+      return [{ b:'P', t:'메인 고정 데스크 보조 · 전동 높낮이 · ' + fin }, { b:'WS', t:'모션 옵션 — 집중결재+건강의식 병행' }];
+    }
+  },
+  {
+    id:'l_ext', name:'L형 익스텐션', area:'데스크 시스템',
+    pfKey: () => 'l_ext',
+    on: c => c.ws.has('대면보고형'),
+    detail: c => {
+      const mat = c.price==='P1' ? '원목 리턴·브릿지' : c.price==='P2' ? '메탈+목재' : '라미네이트';
+      return [{ b:'P', t: mat }, { b:'WS', t:'보고 동선 확장 · 방문자 응대면' }];
+    }
+  },
+  {
+    id:'smart_panel', name:'스마트 기술 통합 패널', area:'데스크 시스템',
+    pfKey: () => 'smart_panel',
+    on: () => true,
+    detail: c => {
+      const d = c.price==='P1'
+        ? '최고급 은폐형 — 전선 완전 내장, 무선 충전 패드, USB-C 허브 일체형'
+        : c.price==='P2' ? '반은폐형 — 케이블 트레이, 포트 내장'
+        : '기본 노출형 — 케이블 트레이만 제공';
+      return [{ b:'P', t: d }];
+    }
+  },
+
+  // ── 프리미엄 미팅 (2) ──────────────────────────────────────
+  {
+    id:'conf_table', name:'소회의 테이블 (4~6인)', area:'프리미엄 미팅',
+    pfKey: () => 'conf_table',
+    on: c => ['S1','S4'].includes(c.space) && c.ws.has('협업주도형'),
+    detail: c => {
+      const t = c.price==='P1' ? '원목 상판 6인 · 케이블 포트 내장' : c.price==='P2' ? '혼합 상판 4~6인' : '기본 4인';
+      return [{ b:'P', t }, { b:'WS', t:'미팅·협업·보고 공간' }];
+    }
+  },
+  {
+    id:'round_table', name:'원형/라운드 테이블 (2~4인)', area:'프리미엄 미팅',
+    pfKey: () => 'round_table',
+    on: c => c.ws.has('대외영접형') || c.ws.has('협업주도형'),
+    detail: c => {
+      const t = c.price==='P1' ? '원형 원목 상판 4인 · 대리석 옵션' : c.price==='P2' ? '혼합 원형 4인' : '기본 원형 2~3인';
+      return [{ b:'P', t }, { b:'WS', t:'비공식·수평 분위기 미팅' }];
+    }
+  },
+
+  // ── 하이엔드 수납 (5) ──────────────────────────────────────
+  {
+    id:'work_wall', name:'수납월 (Work Wall)', area:'하이엔드 수납',
+    pfKey: c => (c.price==='P1' && c.rank==='R1') ? 'work_wall_b' : c.price==='P2' ? 'work_wall_a' : 'work_wall_c',
+    on: () => true,
+    detail: c => {
+      let type, desc;
+      if (c.price==='P1' && c.rank==='R1') { type = 'Type B — 데스크 직결형 (북미형)'; desc = '원목 패널 · AV 연동 · 북미 표준 통합 시스템'; }
+      else if (c.price==='P2')             { type = 'Type A — 등 뒤 독립형';            desc = '소프트 클로즈 · 모듈 확장형'; }
+      else                                 { type = 'Type C — 측벽형 (유럽형)';          desc = '기본 마감 · 실용 수납'; }
+      return [{ b:'P', t: type + ' · ' + desc }];
+    }
+  },
+  {
+    id:'credenza_01', name:'크레덴자 TYPE 01 — 수평 연출형', area:'하이엔드 수납',
+    pfKey: () => 'credenza_01',
+    on: c => c.space === 'S3' || c.rank === 'R4',
+    detail: c => {
+      const top = c.price==='P1' ? '원목 상판' : '라미네이트 상판';
+      return [{ b:'P', t:'파티션 대용 · 낮은 수평 실루엣 · ' + top }, { b:'WS', t:'오픈 공간 구분·연출' }];
+    }
+  },
+  {
+    id:'credenza_02', name:'크레덴자 TYPE 02 — 미니바 통합형', area:'하이엔드 수납',
+    pfKey: () => 'credenza_02',
+    on: c => c.price === 'P1' || c.space === 'S4',
+    detail: () => [
+      { b:'P1', t:'VIP 접객용 · 소형 냉장고 매립 · AV 전원 연동 · 하이엔드 마감' },
+      { b:'WS', t:'대외 영접 최상급 연출' },
+    ]
+  },
+  {
+    id:'credenza_03', name:'크레덴자 TYPE 03 — 벽면 수납형', area:'하이엔드 수납',
+    pfKey: () => 'credenza_03',
+    on: c => c.space === 'S1' || c.industry === 'I1',
+    detail: c => {
+      const door = c.price==='P1' ? '원목·유리 도어' : c.price==='P2' ? '멜라민+원목 포인트' : '기본 멜라민';
+      return [{ b:'P', t:'벽면 밀착 최대 수납 · ' + door }];
+    }
+  },
+  {
+    id:'wardrobe', name:'임원용 프리미엄 옷장', area:'하이엔드 수납',
+    pfKey: () => 'wardrobe',
+    on: c => c.rank !== 'R4',
+    detail: c => {
+      const fin = c.price==='P1' ? '원목 외장 · 조명 내장' : c.price==='P2' ? '우드톤 멜라민' : '기본형';
+      return [{ b:'P', t:'전신 거울 내장 · ' + fin }];
+    }
+  },
+
+  // ── 라운지 & 연출 (4) ──────────────────────────────────────
+  {
+    id:'vip_sofa', name:'VIP 소파 세트', area:'라운지 & 연출',
+    pfKey: () => 'vip_sofa',
+    on: c => c.space === 'S4' || (c.rank === 'R1' && c.ws.has('대외영접형')),
+    detail: c => {
+      const t = c.price==='P1' ? '풀 레더 3+1인 · 원목 프레임 소파 테이블' : c.price==='P2' ? '패브릭/레더 2+1인' : '기본 패브릭 2인';
+      return [{ b:'P', t }, { b:'WS', t:'VIP 접객·브랜드 연출' }];
+    }
+  },
+  {
+    id:'lounge_chair', name:'1인용 라운지 체어', area:'라운지 & 연출',
+    pfKey: () => 'lounge_chair',
+    on: c => ['S1','S2'].includes(c.space) && c.ws.has('대외영접형'),
+    detail: c => {
+      const t = c.price==='P1' ? '디자이너 레더 라운지 체어 · 사이드 테이블 세트' : c.price==='P2' ? '프리미엄 패브릭 체어' : '기본 체어';
+      return [{ b:'P', t }, { b:'WS', t:'소규모 영접·방문자 대기' }];
+    }
+  },
+  {
+    id:'reception_table', name:'응접 티테이블 세트', area:'라운지 & 연출',
+    pfKey: () => 'reception_table',
+    on: c => {
+      const sofaOn  = c.space === 'S4' || (c.rank === 'R1' && c.ws.has('대외영접형'));
+      const chairOn = ['S1','S2'].includes(c.space) && c.ws.has('대외영접형');
+      return sofaOn || chairOn;
+    },
+    detail: c => {
+      const t = c.price==='P1' ? '원목·대리석 상판 티테이블' : c.price==='P2' ? '목재+유리 조합' : '기본 티테이블';
+      return [{ b:'P', t }, { b:'WS', t:'소파·체어 세트 연동' }];
+    }
+  },
+  {
+    id:'display_wall', name:'디스플레이 월 & AV 캐비닛', area:'라운지 & 연출',
+    pfKey: () => 'display_wall',
+    on: c => c.price === 'P1' && c.ws.has('대외영접형'),
+    detail: () => [{ b:'P1', t:'대형 디스플레이 매립 · 전선 완전 은폐 · AV 캐비닛 통합 · 화상회의 연동' }]
+  },
+
+  // ── 보안 & 프라이버시 (2) ─────────────────────────────────
+  {
+    id:'privacy_screen', name:'하부 가림판 & 측/후면 스크린', area:'보안 & 프라이버시',
+    pfKey: () => 'privacy_screen',
+    on: c => ['S2','S3'].includes(c.space) || c.rank === 'R4',
+    detail: c => {
+      const mat = c.price==='P1' ? '우드 패널 · 소프트 쿠션 스크린' : c.price==='P2' ? '패브릭+메탈' : '기본 멜라민';
+      return [{ b:'P', t: mat }, { b:'WS', t:'시각 프라이버시 · 업무 집중' }];
+    }
+  },
+  {
+    id:'security_lock', name:'시건 장치 & 개인 금고', area:'보안 & 프라이버시',
+    pfKey: () => 'security_lock',
+    on: c => c.industry === 'I1',
+    detail: () => [
+      { b:'I1', t:'지문인식 잠금 · 개인 금고 내장 · 기밀문서 전용 수납 서랍' },
+      { b:'WS', t:'보수·전문직군 필수 보안' },
+    ]
+  },
+];
+
+const GAP_PRIORITY = [
+  { pfKey:'work_wall_b', label:'수납월 Type B (데스크 직결형)',  reason:'NeoCon 핵심 발견 — 데스크 직결형 북미 표준 시스템 전무' },
+  { pfKey:'credenza_02', label:'크레덴자 TYPE 02 미니바 통합형', reason:'VIP 전용 소형 냉장고/AV 전원 완벽 매립형 크레덴자 부재' },
+  { pfKey:'display_wall',label:'디스플레이 월 & AV 캐비닛',     reason:'대형 모니터·화상장비 전선 은폐형 프리미엄 미디어 가구 부재' },
+];
+
+// ============================================================
+// [D] 워크방식 도출
+// ============================================================
+function deriveWS(space, rank, industry) {
+  const ws = new Set();
+  if (space === 'S1' || industry === 'I1')                 ws.add('집중결재형');
+  if (industry === 'I3' || rank === 'R3' || rank === 'R4') ws.add('대면보고형');
+  if (space === 'S3' || industry === 'I2')                 ws.add('협업주도형');
+  if (space === 'S4' || rank === 'R1')                     ws.add('대외영접형');
+  if (rank === 'R4')                                       ws.add('실무집중형');
+  return ws;
+}
+
+// ============================================================
+// [E] 동적 드롭다운 상호 배타 필터 — syncOptions
+//     spaceSelect 인덱스: S1=0, S2=1, S3=2, S4=3
+//     rankSelect  인덱스: R1=0, R2=1, R3=2, R4=3
+//     priceSelect 인덱스: P1=0, P2=1, P3=2
+// ============================================================
+function syncOptions(triggerId) {
+  const space = document.getElementById('spaceSelect');
+  const rank  = document.getElementById('rankSelect');
+  const price = document.getElementById('priceSelect');
+
+  // 1. 모든 옵션 비활성화(disabled) 초기화
+  Array.from(space.options).forEach(o => o.disabled = false);
+  Array.from(rank.options).forEach(o => o.disabled = false);
+  Array.from(price.options).forEach(o => o.disabled = false);
+
+  // 2. 상호 배타 락(Lock) 조건문 처리
+  if (rank.value === 'R4') {
+    space.options[0].disabled = true;  // S1 차단
+    space.options[3].disabled = true;  // S4 차단
+    price.options[0].disabled = true;  // P1 차단
+    if (space.value === 'S1' || space.value === 'S4') space.value = 'S3';
+    if (price.value === 'P1') price.value = 'P2';
+  }
+  if (space.value === 'S1' || space.value === 'S4') {
+    rank.options[3].disabled  = true;  // R4 차단
+    price.options[2].disabled = true;  // P3 차단
+    if (rank.value === 'R4') rank.value = 'R1';
+    if (price.value === 'P3') price.value = 'P1';
+  }
+  if (space.value === 'S3') {
+    rank.options[0].disabled = true;   // R1 차단
+    if (rank.value === 'R1') rank.value = 'R2';
+  }
+
+  // 3. 메인 시뮬레이션 실행
+  updateSimulation();
+}
+
+// ============================================================
+// [F] 메인 시뮬레이션 — updateSimulation
+// ============================================================
+const AREAS    = ['데스크 시스템','프리미엄 미팅','하이엔드 수납','라운지 & 연출','보안 & 프라이버시'];
+const ST_CLS   = { exist:'on-exist', partial:'on-partial', gap:'on-gap' };
+const ST_BADGE = { exist:'badge-on', partial:'badge-part', gap:'badge-gap' };
+const ST_LABEL = { exist:'있음', partial:'부분', gap:'공백' };
+const BADGE_CLS = { P1:'bp1', P2:'bp2', P3:'bp3', WS:'bws', I1:'bp1', I2:'bp2', I3:'bp3' };
+function priceCls(p) { return BADGE_CLS[p] || 'bp3'; }
+
+function updateSimulation() {
+  const space    = document.getElementById('spaceSelect').value;
+  const rank     = document.getElementById('rankSelect').value;
+  const price    = document.getElementById('priceSelect').value;
+  const industry = document.getElementById('industry').value;
+
+  const ws  = deriveWS(space, rank, industry);
+  const ctx = { space, rank, price, industry, ws };
+
+  const activeIds = new Set(MODULES.filter(m => m.on(ctx)).map(m => m.id));
+
+  // 워크방식 렌더
+  document.getElementById('wsRow').innerHTML = ws.size
+    ? [...ws].map(w =>
+        `<div class="ws-chip">${w}<div class="ws-sub">${WS_META[w]?.sub || ''}</div></div>`
+      ).join('')
+    : `<span style="color:var(--off);font-size:13px;font-style:italic">도출된 워크방식 없음</span>`;
+
+  // 모듈 카드 렌더
+  let onC = 0, partC = 0, gapC = 0, html = '';
+
+  AREAS.forEach(area => {
+    const list = MODULES.filter(m => m.area === area && activeIds.has(m.id));
+    if (!list.length) return;
+
+    html += `<div class="area"><div class="area-title">${area}</div><div class="mod-grid">`;
+
+    list.forEach(m => {
+      const pfk = typeof m.pfKey === 'function' ? m.pfKey(ctx) : m.pfKey;
+      const pf  = PF[pfk];
+      const st  = pf.status;
+      if (st === 'exist') onC++; else if (st === 'partial') partC++; else gapC++;
+
+      const pcls = priceCls(price);
+      html += `<div class="mod ${ST_CLS[st]}">
+        <div class="mod-head">
+          <span class="mod-name">${m.name}</span>
+          <span class="badge ${ST_BADGE[st]}">${ST_LABEL[st]}</span>
+        </div>
+        <div class="mod-detail">`;
+
+      m.detail(ctx).forEach(d => {
+        if (!d.t) return;
+        const bLabel = d.b === 'P' ? price : d.b;
+        const bCls   = d.b === 'P' ? pcls : (BADGE_CLS[d.b] || 'bws');
+        html += `<div class="dr"><span class="badge-p ${bCls}">${bLabel}</span><span class="dt">${d.t}</span></div>`;
+      });
+
+      if (st === 'gap')
+        html += `<div class="gap-note">공백 — ${pf.note}</div>`;
+      else if (st === 'partial')
+        html += `<div class="part-note">부분 보유 — ${pf.note}</div>`;
+      else if (pf.products && pf.products !== '—')
+        html += `<span class="exist-note">관련 제품: ${pf.products}</span>`;
+
+      html += `</div></div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  document.getElementById('modResult').innerHTML = html ||
+    `<span style="color:var(--off);font-size:13px">활성 모듈 없음</span>`;
+  document.getElementById('cOn').textContent    = onC;
+  document.getElementById('cPart').textContent  = partC;
+  document.getElementById('cGap').textContent   = gapC;
+  document.getElementById('cTotal').textContent = onC + partC + gapC;
+
+  // 공백 우선순위 박스
+  const activeGaps = GAP_PRIORITY.filter(g =>
+    MODULES.some(m => {
+      if (!activeIds.has(m.id)) return false;
+      const k = typeof m.pfKey === 'function' ? m.pfKey(ctx) : m.pfKey;
+      return k === g.pfKey && PF[k].status === 'gap';
+    })
+  );
+  document.getElementById('priorityBox').innerHTML = activeGaps.length
+    ? `<div class="priority-box">
+        <h3>이 조합의 공백 — 개발 우선순위</h3>
+        <div class="priority-list">
+          ${activeGaps.map((g, i) => `
+            <div class="priority-item">
+              <span class="pri-num">${i + 1}</span>
+              <span>${g.label}</span>
+              <span class="pri-text">— ${g.reason}</span>
+            </div>`).join('')}
+        </div>
+      </div>`
+    : '';
+}
+
+// ============================================================
+// [G] 셀렉트 초기 옵션 채우기
+// ============================================================
+function fillSelect(el, obj) {
+  el.innerHTML = Object.entries(obj)
+    .map(([k, v]) => `<option value="${k}">${k} · ${v}</option>`)
+    .join('');
+}
+fillSelect(document.getElementById('spaceSelect'), SPACES);
+fillSelect(document.getElementById('rankSelect'),  RANKS);
+fillSelect(document.getElementById('priceSelect'), PRICES);
+fillSelect(document.getElementById('industry'),    INDUSTRIES);
+
+// ============================================================
+// [H] 초기 로드 — syncOptions 호출로 배타 규칙 + 렌더 동시 실행
+// ============================================================
+window.onload = function () {
+  syncOptions('spaceSelect');
+};
+</script>
+</body>
+</html>
